@@ -14,12 +14,12 @@ namespace HappyTetris
     public partial class MainWindow : Window
     {
         private const double DesignWidth = 550;
-        private const double DesignHeight = 800;
+        private const double DesignHeight = 763;
         /// <summary>Design height of the tetris board (top to bottom where blocks land) in pixels.</summary>
-        private const double DesignBoardHeight = 720;
+        private const double DesignBoardHeight = 660;
         /// <summary>Default max height of the board (top to bottom) in pixels.</summary>
-        private const double DefaultMaxBoardHeightPx = 600;
-        private const double MaxBoardHeightFraction = 0.9; // board cannot exceed 90% of screen height
+        private const double DefaultMaxBoardHeightPx = 660;
+        private const double MaxBoardHeightFraction = 0.92; // board cannot exceed 92% of screen height
         private const double MarginFromScreen = 24;
 
         private readonly GameEngine _gameEngine;
@@ -28,7 +28,7 @@ namespace HappyTetris
         private readonly ContextMenu _audioOptionsMenu;
         private readonly MenuItem _soundEffectsMenuItem;
         private readonly MenuItem _gameMusicMenuItem;
-        private readonly int _cellSize = 30; // Clean cell size for 360x720 board (12x24 grid)
+        private readonly double _cellSize = 27.5; // Cell size for 360x660 board (12x24 grid)
         private static readonly Color AccentGoldColor = Color.FromRgb(255, 215, 0);
 
         public MainWindow()

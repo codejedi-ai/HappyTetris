@@ -2,8 +2,8 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="快乐俄罗斯方块"
-        Height="860" Width="550"
-        MinHeight="860" MinWidth="500"
+        Height="763" Width="550"
+        MinHeight="763" MinWidth="500"
         WindowStartupLocation="CenterScreen"
         Background="#2A2A2A"
         KeyDown="Window_KeyDown"
@@ -160,7 +160,7 @@
                     CornerRadius="10" HorizontalAlignment="Center" VerticalAlignment="Stretch"
                     Background="#2A2A2A">
                 <Viewbox Stretch="Uniform">
-                    <Canvas x:Name="GameCanvas" Width="360" Height="720" ClipToBounds="True"/>
+                    <Canvas x:Name="GameCanvas" Width="360" Height="660" ClipToBounds="True"/>
                 </Viewbox>
             </Border>
 
