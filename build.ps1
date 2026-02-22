@@ -1,32 +1,42 @@
 # Happy Tetris - Build and Installer Script
 # PowerShell Script for Windows
 
+$ErrorActionPreference = "Stop"
+
+$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+Set-Location $scriptDir
+
+$projectPath = Join-Path $scriptDir "HappyTetris.csproj"
+$publishPath = Join-Path $scriptDir "publish"
+$installerPath = Join-Path $scriptDir "Installer\publish"
+
 Write-Host "======================================" -ForegroundColor Cyan
 Write-Host "  快乐俄罗斯方块 - Build Script" -ForegroundColor Cyan
 Write-Host "  Happy Tetris - Build Script" -ForegroundColor Cyan
 Write-Host "======================================" -ForegroundColor Cyan
 Write-Host ""
 
-$projectPath = ".\HappyTetris"
-$publishPath = ".\publish"
-$installerPath = ".\installer"
+if (-not (Get-Command dotnet -ErrorAction SilentlyContinue)) {
+    Write-Host ".NET SDK not found. Please install .NET 8 SDK and try again." -ForegroundColor Red
+    exit 1
+}
 
 # Step 1: Clean previous builds
 Write-Host "[1/5] Cleaning previous builds..." -ForegroundColor Yellow
 if (Test-Path $publishPath) {
     Remove-Item -Recurse -Force $publishPath
 }
-if (Test-Path ".\HappyTetris\bin") {
-    Remove-Item -Recurse -Force ".\HappyTetris\bin"
+if (Test-Path (Join-Path $scriptDir "bin")) {
+    Remove-Item -Recurse -Force (Join-Path $scriptDir "bin")
 }
-if (Test-Path ".\HappyTetris\obj") {
-    Remove-Item -Recurse -Force ".\HappyTetris\obj"
+if (Test-Path (Join-Path $scriptDir "obj")) {
+    Remove-Item -Recurse -Force (Join-Path $scriptDir "obj")
 }
 Write-Host "Done!" -ForegroundColor Green
 
 # Step 2: Restore NuGet packages
 Write-Host "[2/5] Restoring NuGet packages..." -ForegroundColor Yellow
-dotnet restore $projectPath
+dotnet restore "$projectPath"
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Failed to restore packages!" -ForegroundColor Red
     exit 1
@@ -35,7 +45,7 @@ Write-Host "Done!" -ForegroundColor Green
 
 # Step 3: Build the application
 Write-Host "[3/5] Building application..." -ForegroundColor Yellow
-dotnet build $projectPath --configuration Release
+dotnet build "$projectPath" --configuration Release
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Failed to build!" -ForegroundColor Red
     exit 1
@@ -44,7 +54,7 @@ Write-Host "Done!" -ForegroundColor Green
 
 # Step 4: Publish the application
 Write-Host "[4/5] Publishing application..." -ForegroundColor Yellow
-dotnet publish $projectPath `
+dotnet publish "$projectPath" `
     --configuration Release `
     --runtime win-x64 `
     --self-contained true `
@@ -75,9 +85,9 @@ Write-Host "Published files location: $publishPath" -ForegroundColor Cyan
 Write-Host "Installer files location: $installerPath" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "To run the game:" -ForegroundColor Yellow
-Write-Host "  .\$publishPath\HappyTetris.exe" -ForegroundColor White
+Write-Host "  $publishPath\HappyTetris.exe" -ForegroundColor White
 Write-Host ""
 Write-Host "To create MSI installer (requires WiX Toolset):" -ForegroundColor Yellow
 Write-Host "  1. Install WiX Toolset v4 from https://wixtoolset.org/" -ForegroundColor White
-Write-Host "  2. Run: wix build -arch x64 -out HappyTetris.msi .\HappyTetris\Installer\Product.wxs" -ForegroundColor White
+Write-Host "  2. Run: wix build -arch x64 -out HappyTetris.msi .\Installer\Product.wxs" -ForegroundColor White
 Write-Host ""

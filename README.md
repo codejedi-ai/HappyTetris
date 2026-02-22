@@ -22,6 +22,7 @@ A classic Tetris game built with C# and WPF for Windows, featuring a beautiful C
   - Starting speed: 2000ms per drop (gentler for reaction time)
   - Minimum speed: 800ms (more time to respond)
   - Gentle difficulty progression
+- **Tetris Theme Music**: Looping background melody during gameplay
 - **Sound Effects**: Built-in audio feedback for game actions
 - **Scoring System**: 
   - 1 line: 100 points
@@ -176,16 +177,19 @@ The game features a traditional Chinese color palette with high contrast for eld
 
 ## 🎵 Audio Features
 
-The game includes synthesized sound effects for:
+The game includes synthesized audio for:
+- Full-length Type-A Tetris theme loop (note name + pitch + duration score)
+- Slower background music tempo tuned for older adult players
+- Separate toggles for `Game Music` and `Sound Effects` from one 🔊 options button
 - Piece movement
 - Piece rotation
-- Piece drop
+- Piece drop (low bass "boom" impact)
 - Line clear
 - Level up
 - Game over
 - Game start
 
-*Note: Audio can be toggled on/off using the 🔊 button*
+*Note: Click the 🔊 button to open audio options and toggle music/effects independently*
 
 ## 🏆 Scoring Details
 

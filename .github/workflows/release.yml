@@ -1,0 +1,75 @@
+name: Build And Release HappyTetris
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: "Release tag (example: v1.0.0)"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  build-release:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Resolve release metadata
+        id: meta
+        shell: pwsh
+        run: |
+          if ("${{ github.event_name }}" -eq "workflow_dispatch") {
+            $tag = "${{ inputs.tag_name }}"
+          } else {
+            $tag = "${{ github.ref_name }}"
+          }
+
+          if (-not $tag) {
+            throw "Could not resolve release tag."
+          }
+
+          "tag=$tag" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          "zip_name=HappyTetris-$tag-win-x64.zip" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+
+      - name: Restore
+        run: dotnet restore .\HappyTetris.csproj
+
+      - name: Publish win-x64 single-file build
+        run: >
+          dotnet publish .\HappyTetris.csproj
+          --configuration Release
+          --runtime win-x64
+          --self-contained true
+          -p:PublishSingleFile=true
+          -p:PublishReadyToRun=true
+          --output .\publish
+
+      - name: Package build output
+        shell: pwsh
+        run: |
+          if (Test-Path ".\${{ steps.meta.outputs.zip_name }}") {
+            Remove-Item ".\${{ steps.meta.outputs.zip_name }}" -Force
+          }
+          Compress-Archive -Path .\publish\* -DestinationPath ".\${{ steps.meta.outputs.zip_name }}"
+
+      - name: Create or update GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.meta.outputs.tag }}
+          name: HappyTetris ${{ steps.meta.outputs.tag }}
+          target_commitish: ${{ github.sha }}
+          generate_release_notes: true
+          files: .\${{ steps.meta.outputs.zip_name }}

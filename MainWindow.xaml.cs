@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -15,7 +16,11 @@ namespace HappyTetris
         private readonly GameEngine _gameEngine;
         private readonly AudioController _audioController;
         private readonly DispatcherTimer _gameTimer;
+        private readonly ContextMenu _audioOptionsMenu;
+        private readonly MenuItem _soundEffectsMenuItem;
+        private readonly MenuItem _gameMusicMenuItem;
         private readonly int _cellSize = 30; // Clean cell size for 360x720 board (12x24 grid)
+        private static readonly Color AccentGoldColor = Color.FromRgb(255, 215, 0);
 
         public MainWindow()
         {
@@ -24,9 +29,14 @@ namespace HappyTetris
             _gameEngine = new GameEngine();
             _audioController = new AudioController();
             _gameTimer = new DispatcherTimer();
+            _audioOptionsMenu = new ContextMenu();
+            _soundEffectsMenuItem = new MenuItem();
+            _gameMusicMenuItem = new MenuItem();
             
             SetupGameEvents();
             SetupTimer();
+            SetupAudioOptionsMenu();
+            UpdatePauseButtonState();
             
             ClearGameCanvas();
         }
@@ -53,6 +63,48 @@ namespace HappyTetris
             };
         }
 
+        private void SetupAudioOptionsMenu()
+        {
+            _soundEffectsMenuItem.Header = "🔊 Sound Effects";
+            _soundEffectsMenuItem.IsCheckable = true;
+            _soundEffectsMenuItem.Click += (s, e) =>
+            {
+                _audioController.ToggleEffects();
+                SyncAudioOptionsMenuState();
+            };
+
+            _gameMusicMenuItem.Header = "🎵 Game Music";
+            _gameMusicMenuItem.IsCheckable = true;
+            _gameMusicMenuItem.Click += (s, e) =>
+            {
+                _audioController.ToggleMusic();
+
+                if (_audioController.MusicEnabled &&
+                    _gameEngine.IsPlaying &&
+                    !_gameEngine.IsPaused &&
+                    !_gameEngine.IsGameOver)
+                {
+                    _audioController.StartBackgroundMusic();
+                }
+                else
+                {
+                    _audioController.StopBackgroundMusic();
+                }
+
+                SyncAudioOptionsMenuState();
+            };
+
+            _audioOptionsMenu.Items.Add(_soundEffectsMenuItem);
+            _audioOptionsMenu.Items.Add(_gameMusicMenuItem);
+            SyncAudioOptionsMenuState();
+        }
+
+        private void SyncAudioOptionsMenuState()
+        {
+            _soundEffectsMenuItem.IsChecked = _audioController.EffectsEnabled;
+            _gameMusicMenuItem.IsChecked = _audioController.MusicEnabled;
+        }
+
         private void ClearGameCanvas()
         {
             GameCanvas.Children.Clear();
@@ -66,7 +118,7 @@ namespace HappyTetris
                     Y1 = 0,
                     X2 = x * _cellSize,
                     Y2 = 24 * _cellSize,
-                    Stroke = new SolidColorBrush(Color.FromRgb(255, 215, 0)),
+                    Stroke = new SolidColorBrush(AccentGoldColor),
                     StrokeThickness = 0.5,
                     Opacity = 0.15
                 };
@@ -81,7 +133,7 @@ namespace HappyTetris
                     Y1 = y * _cellSize,
                     X2 = 12 * _cellSize,
                     Y2 = y * _cellSize,
-                    Stroke = new SolidColorBrush(Color.FromRgb(255, 215, 0)),
+                    Stroke = new SolidColorBrush(AccentGoldColor),
                     StrokeThickness = 0.5,
                     Opacity = 0.15
                 };
@@ -101,7 +153,7 @@ namespace HappyTetris
                 {
                     if (grid[y, x] != 0)
                     {
-                        DrawCell(x, y, GetColorForValue(grid[y, x]));
+                        DrawCell(x, y, Piece.GetColorForCellValue(grid[y, x]), isLanded: true);
                     }
                 }
             }
@@ -120,20 +172,21 @@ namespace HappyTetris
                             DrawCell(
                                 _gameEngine.Player.PositionX + x,
                                 _gameEngine.Player.PositionY + y,
-                                piece.Color);
+                                piece.Color,
+                                isLanded: false);
                         }
                     }
                 }
             }
         }
 
-        private void DrawCell(int x, int y, string color)
+        private void DrawCell(int x, int y, string color, bool isLanded)
         {
             var rect = new Rectangle
             {
                 Width = _cellSize,
                 Height = _cellSize,
-                Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString(color))
+                Fill = CreateCellFillBrush(color, isLanded)
             };
             
             Canvas.SetLeft(rect, x * _cellSize);
@@ -147,7 +200,7 @@ namespace HappyTetris
                 Width = _cellSize,
                 Height = _cellSize,
                 Fill = Brushes.Transparent,
-                Stroke = new SolidColorBrush(Color.FromRgb(255, 215, 0)),
+                Stroke = new SolidColorBrush(AccentGoldColor),
                 StrokeThickness = 1
             };
             
@@ -161,7 +214,7 @@ namespace HappyTetris
             {
                 Width = _cellSize - 6,
                 Height = _cellSize - 6,
-                Fill = new SolidColorBrush(Color.FromArgb(51, 255, 255, 255))
+                Fill = new SolidColorBrush(Color.FromArgb(isLanded ? (byte)30 : (byte)51, 255, 255, 255))
             };
             
             Canvas.SetLeft(highlight, x * _cellSize + 3);
@@ -170,23 +223,56 @@ namespace HappyTetris
             GameCanvas.Children.Add(highlight);
         }
 
-        private string GetColorForValue(int value) => value switch
+        private static Brush CreateCellFillBrush(string color, bool isLanded)
         {
-            1 => "#c41e3a",  // Red
-            2 => "#ffd700",  // Gold
-            3 => "#ff6b35",  // Orange
-            4 => "#ffcc00",  // Yellow
-            5 => "#8b0000",  // Dark red
-            6 => "#fff8e7",  // Cream
-            7 => "#00a86b",  // Jade
-            _ => "#ffffff"
-        };
+            var baseColor = (Color)ColorConverter.ConvertFromString(color);
+            if (!isLanded)
+            {
+                return new SolidColorBrush(baseColor);
+            }
+
+            var gradient = new LinearGradientBrush
+            {
+                StartPoint = new Point(0.5, 0.0),
+                EndPoint = new Point(0.5, 1.0)
+            };
+            gradient.GradientStops.Add(new GradientStop(baseColor, 0.0));
+            gradient.GradientStops.Add(new GradientStop(DarkenColor(baseColor, 0.87), 0.72));
+            gradient.GradientStops.Add(new GradientStop(DarkenColor(baseColor, 0.65), 1.0));
+            return gradient;
+        }
+
+        private static Color DarkenColor(Color color, double factor)
+        {
+            return Color.FromArgb(
+                color.A,
+                (byte)Math.Clamp((int)(color.R * factor), 0, 255),
+                (byte)Math.Clamp((int)(color.G * factor), 0, 255),
+                (byte)Math.Clamp((int)(color.B * factor), 0, 255));
+        }
 
         private void UpdateScore()
         {
-            ScoreText.Text = _gameEngine.GetScore().ToString();
-            LevelText.Text = _gameEngine.GetLevel().ToString();
-            LinesText.Text = _gameEngine.GetLines().ToString();
+            ScoreText.Text = FormatScoreDisplay(_gameEngine.GetScore());
+            LevelText.Text = _gameEngine.GetLevel().ToString("D2");
+            LinesText.Text = _gameEngine.GetLines().ToString("D3");
+        }
+
+        private static string FormatScoreDisplay(int score)
+        {
+            if (score < 1000)
+            {
+                return score.ToString(CultureInfo.InvariantCulture);
+            }
+
+            if (score < 1_000_000)
+            {
+                double inThousands = score / 1000.0;
+                return $"{inThousands.ToString("0.00", CultureInfo.InvariantCulture)}K";
+            }
+
+            double inMillions = score / 1_000_000.0;
+            return $"{inMillions.ToString("0.00", CultureInfo.InvariantCulture)} MIL";
         }
 
         private void ShowGameOver()
@@ -194,6 +280,7 @@ namespace HappyTetris
             _gameTimer.Stop();
             FinalScoreText.Text = _gameEngine.GetScore().ToString();
             GameOverOverlay.Visibility = Visibility.Visible;
+            _audioController.StopBackgroundMusic();
             _audioController.PlayGameOver();
         }
 
@@ -241,14 +328,15 @@ namespace HappyTetris
                     break;
                 case Key.Down:
                     _gameEngine.DropPiece();
-                    _audioController.PlayDrop();
+                    _audioController.PlaySoftDrop();
                     break;
                 case Key.Up:
                     _gameEngine.Rotate();
+                    _audioController.PlayRotate();
                     break;
                 case Key.Space:
                     _gameEngine.HardDrop();
-                    _audioController.PlayDrop();
+                    _audioController.PlayHardDrop();
                     break;
             }
             
@@ -266,8 +354,11 @@ namespace HappyTetris
             StartOverlay.Visibility = Visibility.Collapsed;
             GameOverOverlay.Visibility = Visibility.Collapsed;
             PauseOverlay.Visibility = Visibility.Collapsed;
+            _audioController.StopBackgroundMusic();
             _audioController.PlayStart();
+            _audioController.StartBackgroundMusic();
             _gameTimer.Start();
+            UpdatePauseButtonState();
         }
 
         private void RestartBtn_Click(object sender, RoutedEventArgs e)
@@ -276,6 +367,11 @@ namespace HappyTetris
         }
 
         private void ResumeBtn_Click(object sender, RoutedEventArgs e)
+        {
+            TogglePause();
+        }
+
+        private void PauseBtn_Click(object sender, RoutedEventArgs e)
         {
             TogglePause();
         }
@@ -290,38 +386,42 @@ namespace HappyTetris
             {
                 PauseOverlay.Visibility = Visibility.Visible;
                 _gameTimer.Stop();
+                _audioController.StopBackgroundMusic();
             }
             else
             {
                 PauseOverlay.Visibility = Visibility.Collapsed;
+                _audioController.StartBackgroundMusic();
                 _gameTimer.Start();
             }
+
+            UpdatePauseButtonState();
+        }
+
+        private void UpdatePauseButtonState()
+        {
+            if (PauseBtn == null) return;
+
+            PauseBtn.Content = _gameEngine.IsPaused ? "▶️" : "⏸️";
+            PauseBtn.ToolTip = _gameEngine.IsPaused ? "继续" : "暂停";
         }
 
         private void ShowHelp()
         {
-            MessageBox.Show(
-                "🎮\n\n" +
-                "⬅️ ➡️\n" +
-                "⬆️\n" +
-                "⬇️\n" +
-                "␣\n\n" +
-                "🏆\n\n" +
-                "1️⃣ 📋 = 1️⃣0️⃣0️⃣\n" +
-                "2️⃣ 📋 = 3️⃣0️⃣0️⃣\n" +
-                "3️⃣ 📋 = 5️⃣0️⃣0️⃣\n" +
-                "4️⃣ 📋 = 8️⃣0️⃣0️⃣\n\n" +
-                "P = ⏸️\n" +
-                "␣ = ⬇️⬇️⬇️",
-                "❓",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
+            // Open Tetris rules webpage
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = "https://tetris.fandom.com/wiki/Tetris_Wiki",
+                UseShellExecute = true
+            });
         }
 
         private void AudioBtn_Click(object sender, RoutedEventArgs e)
         {
-            _audioController.Toggle();
-            AudioBtn.Content = _audioController.Enabled ? "🔊" : "🔇";
+            SyncAudioOptionsMenuState();
+            _audioOptionsMenu.PlacementTarget = AudioBtn;
+            _audioOptionsMenu.Placement = System.Windows.Controls.Primitives.PlacementMode.Top;
+            _audioOptionsMenu.IsOpen = true;
         }
 
         private void HelpBtn_Click(object sender, RoutedEventArgs e)

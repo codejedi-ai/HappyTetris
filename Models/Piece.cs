@@ -11,10 +11,16 @@ namespace HappyTetris.Models
         public int[,] Matrix { get; set; }
         public string Color { get; set; }
 
+        private Piece(PieceType type, int[,] matrix, string color)
+        {
+            Type = type;
+            Matrix = matrix;
+            Color = color;
+        }
+
         public static Piece Create(PieceType type)
         {
-            var piece = new Piece { Type = type };
-            piece.Matrix = type switch
+            int[,] matrix = type switch
             {
                 PieceType.I => new int[,] { { 0, 1, 0, 0 }, { 0, 1, 0, 0 }, { 0, 1, 0, 0 }, { 0, 1, 0, 0 } },
                 PieceType.L => new int[,] { { 0, 2, 0 }, { 0, 2, 0 }, { 0, 2, 2 } },
@@ -25,11 +31,11 @@ namespace HappyTetris.Models
                 PieceType.T => new int[,] { { 0, 7, 0 }, { 7, 7, 7 }, { 0, 0, 0 } },
                 _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
             };
-            piece.Color = GetColor(type);
-            return piece;
+
+            return new Piece(type, matrix, GetColor(type));
         }
 
-        private static string GetColor(PieceType type) => type switch
+        public static string GetColor(PieceType type) => type switch
         {
             PieceType.I => "#c41e3a",
             PieceType.L => "#ffd700",
@@ -40,6 +46,16 @@ namespace HappyTetris.Models
             PieceType.T => "#00a86b",
             _ => "#ffffff"
         };
+
+        public static string GetColorForCellValue(int value)
+        {
+            if (value is < 1 or > 7)
+            {
+                return "#ffffff";
+            }
+
+            return GetColor((PieceType)(value - 1));
+        }
 
         public static PieceType GetRandomType()
         {
