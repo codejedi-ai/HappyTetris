@@ -7,7 +7,7 @@ namespace HappyTetris.Audio
     public class AudioController
     {
         private bool _effectsEnabled = true;
-        private bool _musicEnabled = true;
+        private bool _musicEnabled = false;
         private WaveOutEvent? _effectWaveOut;
         private MemoryStream? _effectStream;
         private WaveStream? _effectReader;
