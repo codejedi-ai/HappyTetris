@@ -15,8 +15,10 @@ permissions:
   contents: write
 
 env:
+  Solution_Name: HappyTetris.sln
   PROJECT_PATH: HappyTetris.csproj
   PUBLISH_DIR: publish
+  Configuration: Release
 
 jobs:
   build-release:
@@ -49,10 +51,10 @@ jobs:
           "zip_name=HappyTetris-$tag-win-x64.zip" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
 
       - name: Restore dependencies
-        run: dotnet restore "${{ env.PROJECT_PATH }}"
+        run: dotnet restore "${{ env.Solution_Name }}" --configuration ${{ env.Configuration }}
 
       - name: Build Release
-        run: dotnet build "${{ env.PROJECT_PATH }}" --configuration Release --no-restore
+        run: dotnet build "${{ env.Solution_Name }}" --configuration ${{ env.Configuration }} --no-restore
 
       - name: Publish Release (win-x64, self-contained)
         run: >

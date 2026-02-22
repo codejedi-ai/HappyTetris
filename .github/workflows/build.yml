@@ -1,0 +1,30 @@
+name: Build HappyTetris
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+env:
+  Solution_Name: HappyTetris.sln
+  Configuration: Debug
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restore dependencies
+        run: dotnet restore "${{ env.Solution_Name }}" --configuration ${{ env.Configuration }}
+
+      - name: Build
+        run: dotnet build "${{ env.Solution_Name }}" --configuration ${{ env.Configuration }} --no-restore
