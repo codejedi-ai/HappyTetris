@@ -1,0 +1,3 @@
+@echo off
+echo Starting Happy Tetris...
+start "" "%~dp0HappyTetris.exe"

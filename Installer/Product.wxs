@@ -1,0 +1,68 @@
+<Wix xmlns="http://wixtoolset.org/2006/wix">
+    <Package 
+        Name="快乐俄罗斯方块 - Happy Tetris" 
+        Language="1033" 
+        Version="1.0.0.0"
+        Manufacturer="Happy Games"
+        UpgradeCode="e8f5e5e5-1234-5678-9abc-def012345678"
+        InstallerVersion="500">
+        
+        <SummaryInformation 
+            Description="Happy Tetris Installer" 
+            Manufacturer="Happy Games"
+            Keywords="Installer, Tetris, Game"/>
+        
+        <MediaTemplate EmbedCab="yes"/>
+        
+        <Icon Id="icon.ico" SourceFile="tetris.ico"/>
+        <Property Id="ARPPRODUCTICON" Value="icon.ico"/>
+        
+        <MajorUpgrade 
+            DowngradeErrorMessage="A newer version of [ProductName] is already installed."/>
+        
+        <Feature Id="MainApplication" Title="Happy Tetris" Level="1">
+            <ComponentGroupRef Id="ProductComponents"/>
+            <ComponentGroupRef Id="PublishedFiles"/>
+        </Feature>
+        
+        <UI>
+            <UIRef Id="WixUI_InstallDir"/>
+        </UI>
+        
+        <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER"/>
+        
+        <WixVariable Id="WixUILicenseRtf" Value="License.rtf"/>
+        <WixVariable Id="WixUIBannerBmp" Value="banner.bmp"/>
+        <WixVariable Id="WixUIDialogBmp" Value="dialog.bmp"/>
+        
+    </Package>
+
+    <StandardDirectory Id="ProgramFiles64Folder">
+        <Directory Id="INSTALLFOLDER" Name="HappyTetris">
+            <Component Id="ApplicationShortcut" Guid="*">
+                <Shortcut Id="ApplicationStartMenuShortcut"
+                    Name="快乐俄罗斯方块"
+                    Description="Happy Tetris Game"
+                    Target="[INSTALLFOLDER]HappyTetris.exe"
+                    WorkingDirectory="INSTALLFOLDER"
+                    Icon="icon.ico"/>
+                <RemoveFolder Id="RemoveShortcutDir" On="uninstall"/>
+                <RegistryValue Root="HKCU" Key="Software\HappyGames\HappyTetris" 
+                    Name="installed" Type="integer" Value="1" KeyPath="yes"/>
+            </Component>
+        </Directory>
+    </StandardDirectory>
+    
+    <StandardDirectory Id="DesktopFolder">
+        <Component Id="DesktopShortcut" Guid="*">
+            <Shortcut Id="DesktopShortcut"
+                Name="快乐俄罗斯方块"
+                Description="Happy Tetris Game"
+                Target="[INSTALLFOLDER]HappyTetris.exe"
+                WorkingDirectory="INSTALLFOLDER"
+                Icon="icon.ico"/>
+            <RegistryValue Root="HKCU" Key="Software\HappyGames\HappyTetris" 
+                Name="desktop" Type="integer" Value="1" KeyPath="yes"/>
+        </Component>
+    </StandardDirectory>
+</Wix>
