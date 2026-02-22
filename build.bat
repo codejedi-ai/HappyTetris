@@ -15,7 +15,7 @@ echo   Happy Tetris - Build Script
 echo ======================================
 echo.
 
-where dotnet >nul 2>&1
+dotnet --version >nul 2>&1
 if %ERRORLEVEL% neq 0 (
     echo .NET SDK not found. Please install .NET 8 SDK and try again.
     popd
@@ -50,13 +50,7 @@ echo Done!
 echo.
 
 echo [4/5] Publishing application...
-dotnet publish "%projectPath%" ^
-    --configuration Release ^
-    --runtime win-x64 ^
-    --self-contained true ^
-    --publish-single-file true ^
-    --publish-ready-to-run true ^
-    --output "%publishPath%"
+dotnet publish "%projectPath%" --configuration Release --runtime win-x64 --self-contained true -p:PublishSingleFile=true -p:PublishReadyToRun=true --output "%publishPath%"
 if %ERRORLEVEL% neq 0 (
     echo Failed to publish!
     popd
@@ -80,9 +74,9 @@ echo.
 echo To run the game:
 echo   "%publishPath%\HappyTetris.exe"
 echo.
-echo To create MSI installer ^(requires WiX Toolset^):
+echo To create MSI installer (requires WiX Toolset):
 echo   1. Install WiX Toolset v4 from https://wixtoolset.org/
 echo   2. Run: wix build -arch x64 -out HappyTetris.msi .\Installer\Product.wxs
 echo.
 popd
-pause
+if "%1"=="" pause

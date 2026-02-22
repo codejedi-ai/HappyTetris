@@ -12,7 +12,13 @@
     <Authors>Happy Games</Authors>
     <Description>快乐俄罗斯方块 - Classic Tetris Game</Description>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>app.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Resource Include="app.ico" />
+    <Resource Include="logo.png" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="NAudio" Version="2.2.1" />

@@ -58,8 +58,8 @@ dotnet publish "$projectPath" `
     --configuration Release `
     --runtime win-x64 `
     --self-contained true `
-    --publish-single-file true `
-    --publish-ready-to-run true `
+    -p:PublishSingleFile=true `
+    -p:PublishReadyToRun=true `
     --output $publishPath
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Failed to publish!" -ForegroundColor Red

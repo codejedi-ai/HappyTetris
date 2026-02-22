@@ -50,22 +50,9 @@ jobs:
           "tag=$tag" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
           "zip_name=HappyTetris-$tag-win-x64.zip" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
 
-      - name: Restore dependencies
-        run: dotnet restore "${{ env.Solution_Name }}" -p:Configuration=${{ env.Configuration }}
-
-      - name: Build Release
-        run: dotnet build "${{ env.Solution_Name }}" -p:Configuration=${{ env.Configuration }} --no-restore
-
-      - name: Publish Release (win-x64, self-contained)
-        run: >
-          dotnet publish "${{ env.PROJECT_PATH }}"
-          -p:Configuration=${{ env.Configuration }}
-          --runtime win-x64
-          --self-contained true
-          -p:PublishSingleFile=true
-          -p:PublishReadyToRun=true
-          --no-build
-          --output "${{ env.PUBLISH_DIR }}"
+      - name: Run build.bat
+        run: .\build.bat
+        shell: cmd
 
       - name: Package publish output
         shell: pwsh

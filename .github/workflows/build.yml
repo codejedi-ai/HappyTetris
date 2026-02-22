@@ -23,8 +23,6 @@ jobs:
         with:
           dotnet-version: "8.0.x"
 
-      - name: Restore dependencies
-        run: dotnet restore "${{ env.Solution_Name }}" -p:Configuration=${{ env.Configuration }}
-
-      - name: Build
-        run: dotnet build "${{ env.Solution_Name }}" -p:Configuration=${{ env.Configuration }} --no-restore
+      - name: Run build.bat
+        run: .\build.bat
+        shell: cmd
