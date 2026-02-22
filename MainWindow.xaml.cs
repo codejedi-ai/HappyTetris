@@ -13,19 +13,16 @@ namespace HappyTetris
 {
     public partial class MainWindow : Window
     {
-        // Design constants - aspect ratio is preserved when scaling
-        private const double DesignBoardWidth = 360;
-        private const double DesignBoardHeight = 660; // 24 rows × 27.5px
+        // Design ratios - all dimensions are relative to screen size
         private const double BoardColumns = 12;
         private const double BoardRows = 24;
-        private const double SidebarWidth = 110;
-        private const double WindowBorderWidth = 550;
-        private const double WindowBorderHeight = 763; // Includes title bar + borders (~103px)
-        private const double WindowChromeHeight = 103; // Title bar + window borders
-        private const double WindowChromeWidth = 80; // Window borders left + right
+        private const double BoardAspectRatio = 12.0 / 24.0; // Width / Height = 0.5
+        private const double SidebarWidthRatio = 0.20; // Sidebar is 20% of total window width
+        private const double WindowChromeHeightRatio = 0.08; // Title bar + borders as fraction of window height
+        private const double WindowChromeWidthRatio = 0.10; // Window borders as fraction of window width
         private const double MaxBoardHeightFraction = 0.88; // Board max 88% of available screen height
-        private const double MinBoardHeightFraction = 0.75; // Minimum board height for very small screens
-        private const double MarginFromScreen = 24;
+        private const double MinBoardHeightFraction = 0.70; // Minimum board height for very small screens
+        private const double MarginFromScreenRatio = 0.03; // Margin as fraction of screen dimension
 
         private readonly GameEngine _gameEngine;
         private readonly AudioController _audioController;
@@ -127,40 +124,50 @@ namespace HappyTetris
 
         private void ConstrainWindowToScreen()
         {
-            double workHeight = SystemParameters.WorkArea.Height - MarginFromScreen;
-            double workWidth = SystemParameters.WorkArea.Width - MarginFromScreen;
+            double screenWorkHeight = SystemParameters.WorkArea.Height;
+            double screenWorkWidth = SystemParameters.WorkArea.Width;
+            
+            // Calculate margins as ratios of screen dimensions
+            double marginHeight = MarginFromScreenRatio * screenWorkHeight;
+            double marginWidth = MarginFromScreenRatio * screenWorkWidth;
+            
+            double workHeight = screenWorkHeight - marginHeight;
+            double workWidth = screenWorkWidth - marginWidth;
 
             if (workHeight <= 0 || workWidth <= 0) return;
 
-            // Calculate available height for the game board (accounting for window chrome)
-            double availableBoardHeight = workHeight - WindowChromeHeight;
+            // Calculate available space for game board (accounting for window chrome)
+            double availableBoardHeight = workHeight * (1.0 - WindowChromeHeightRatio);
             
-            // Board height is constrained between min and max fractions of screen
+            // Board height is constrained between min and max fractions of available space
             double maxBoardHeight = MaxBoardHeightFraction * availableBoardHeight;
             double minBoardHeight = MinBoardHeightFraction * availableBoardHeight;
             
-            // Calculate scale factor based on available space
-            double scaleByBoard = maxBoardHeight / DesignBoardHeight;
-            double scaleByWidth = workWidth / (DesignBoardWidth + SidebarWidth);
+            // Calculate board height based on width constraint (maintain aspect ratio)
+            double availableBoardWidth = workWidth * (1.0 - SidebarWidthRatio - WindowChromeWidthRatio);
+            double boardHeightByWidth = availableBoardWidth / BoardAspectRatio;
             
-            // Use the smaller scale to ensure the game fits both height and width
-            double scale = Math.Min(1.0, Math.Min(scaleByBoard, scaleByWidth));
-            
-            // Calculate scaled board dimensions
-            double scaledBoardWidth = DesignBoardWidth * scale;
-            double scaledBoardHeight = DesignBoardHeight * scale;
+            // Use the smaller of height-based or width-based calculation
+            double targetBoardHeight = Math.Min(maxBoardHeight, boardHeightByWidth * BoardAspectRatio);
             
             // Ensure board doesn't go below minimum size
-            if (scaledBoardHeight < minBoardHeight)
-            {
-                scale = minBoardHeight / DesignBoardHeight;
-                scaledBoardWidth = DesignBoardWidth * scale;
-                scaledBoardHeight = minBoardHeight;
-            }
+            double scaledBoardHeight = Math.Max(targetBoardHeight, minBoardHeight);
+            double scaledBoardWidth = scaledBoardHeight * BoardAspectRatio;
+            
+            // Calculate window chrome in absolute pixels based on final dimensions
+            double windowChromeHeight = scaledBoardHeight * WindowChromeHeightRatio / (1.0 - WindowChromeHeightRatio);
+            double windowChromeWidth = scaledBoardWidth * WindowChromeWidthRatio / (1.0 - SidebarWidthRatio - WindowChromeWidthRatio);
+            double sidebarWidth = (scaledBoardWidth + windowChromeWidth) * SidebarWidthRatio / (1.0 - SidebarWidthRatio);
             
             // Calculate final window size
-            Width = scaledBoardWidth + SidebarWidth + WindowChromeWidth;
-            Height = scaledBoardHeight + WindowChromeHeight;
+            Width = scaledBoardWidth + sidebarWidth + windowChromeWidth;
+            Height = scaledBoardHeight + windowChromeHeight;
+            
+            // Set sidebar width
+            if (SidebarBorder != null)
+            {
+                SidebarBorder.Width = sidebarWidth;
+            }
             
             // Calculate cell size based on scaled board
             _cellSize = scaledBoardWidth / BoardColumns;
