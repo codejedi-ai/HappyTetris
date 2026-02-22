@@ -13,13 +13,15 @@ namespace HappyTetris
 {
     public partial class MainWindow : Window
     {
-        private const double DesignWidth = 550;
-        private const double DesignHeight = 763;
-        /// <summary>Design height of the tetris board (top to bottom where blocks land) in pixels.</summary>
-        private const double DesignBoardHeight = 660;
-        /// <summary>Default max height of the board (top to bottom) in pixels.</summary>
-        private const double DefaultMaxBoardHeightPx = 660;
-        private const double MaxBoardHeightFraction = 0.92; // board cannot exceed 92% of screen height
+        // Design constants - aspect ratio is preserved when scaling
+        private const double DesignBoardWidth = 360;
+        private const double DesignBoardHeight = 660; // 24 rows × 27.5px
+        private const double BoardColumns = 12;
+        private const double BoardRows = 24;
+        private const double SidebarWidth = 110;
+        private const double WindowBorderWidth = 550;
+        private const double WindowBorderHeight = 763; // Includes title bar + borders (~103px)
+        private const double MaxBoardHeightFraction = 0.90; // Board max 90% of available screen height
         private const double MarginFromScreen = 24;
 
         private readonly GameEngine _gameEngine;
@@ -28,7 +30,7 @@ namespace HappyTetris
         private readonly ContextMenu _audioOptionsMenu;
         private readonly MenuItem _soundEffectsMenuItem;
         private readonly MenuItem _gameMusicMenuItem;
-        private readonly double _cellSize = 27.5; // Cell size for 360x660 board (12x24 grid)
+        private double _cellSize; // Calculated at runtime based on screen size
         private static readonly Color AccentGoldColor = Color.FromRgb(255, 215, 0);
 
         public MainWindow()
@@ -127,46 +129,56 @@ namespace HappyTetris
 
             if (workHeight <= 0 || workWidth <= 0) return;
 
-            // Board (tetris play area) cannot exceed 90% of screen height nor the default max (600px).
+            // Calculate max board height based on screen (90% of available height)
             double maxBoardHeightFromScreen = MaxBoardHeightFraction * workHeight;
-            double maxBoardHeight = Math.Min(DefaultMaxBoardHeightPx, maxBoardHeightFromScreen);
-            double scaleByBoard = maxBoardHeight / DesignBoardHeight;
-            double scaleByWidth = workWidth / DesignWidth;
+            
+            // Calculate scale factors based on board dimensions and available space
+            double scaleByBoard = maxBoardHeightFromScreen / DesignBoardHeight;
+            double scaleByWidth = workWidth / (DesignBoardWidth + SidebarWidth);
+            
+            // Use the smaller scale to ensure the game fits both height and width
             double scale = Math.Min(1.0, Math.Min(scaleByBoard, scaleByWidth));
-
-            if (scale >= 1.0) return;
-
-            Width = DesignWidth * scale;
-            Height = DesignHeight * scale;
+            
+            // Calculate window size: sidebar + scaled board + window chrome
+            double scaledBoardWidth = DesignBoardWidth * scale;
+            double scaledBoardHeight = DesignBoardHeight * scale;
+            double windowChromeWidth = WindowBorderWidth - DesignBoardWidth - SidebarWidth;
+            double windowChromeHeight = WindowBorderHeight - DesignBoardHeight;
+            
+            Width = scaledBoardWidth + SidebarWidth + windowChromeWidth;
+            Height = scaledBoardHeight + windowChromeHeight;
+            
+            // Calculate cell size based on scaled board
+            _cellSize = scaledBoardWidth / BoardColumns;
         }
 
         private void ClearGameCanvas()
         {
             GameCanvas.Children.Clear();
-            
+
             // Draw grid - subtle lines for better visibility
-            for (int x = 0; x <= 12; x++)
+            for (int x = 0; x <= (int)BoardColumns; x++)
             {
                 var line = new Line
                 {
                     X1 = x * _cellSize,
                     Y1 = 0,
                     X2 = x * _cellSize,
-                    Y2 = 24 * _cellSize,
+                    Y2 = BoardRows * _cellSize,
                     Stroke = new SolidColorBrush(AccentGoldColor),
                     StrokeThickness = 0.5,
                     Opacity = 0.15
                 };
                 GameCanvas.Children.Add(line);
             }
-            
-            for (int y = 0; y <= 24; y++)
+
+            for (int y = 0; y <= (int)BoardRows; y++)
             {
                 var line = new Line
                 {
                     X1 = 0,
                     Y1 = y * _cellSize,
-                    X2 = 12 * _cellSize,
+                    X2 = BoardColumns * _cellSize,
                     Y2 = y * _cellSize,
                     Stroke = new SolidColorBrush(AccentGoldColor),
                     StrokeThickness = 0.5,
@@ -179,12 +191,12 @@ namespace HappyTetris
         private void DrawGame()
         {
             ClearGameCanvas();
-            
+
             // Draw board
             var grid = _gameEngine.Board.GetGrid();
-            for (int y = 0; y < 24; y++)
+            for (int y = 0; y < (int)BoardRows; y++)
             {
-                for (int x = 0; x < 12; x++)
+                for (int x = 0; x < (int)BoardColumns; x++)
                 {
                     if (grid[y, x] != 0)
                     {
