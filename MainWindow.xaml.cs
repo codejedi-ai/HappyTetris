@@ -21,7 +21,10 @@ namespace HappyTetris
         private const double SidebarWidth = 110;
         private const double WindowBorderWidth = 550;
         private const double WindowBorderHeight = 763; // Includes title bar + borders (~103px)
-        private const double MaxBoardHeightFraction = 0.90; // Board max 90% of available screen height
+        private const double WindowChromeHeight = 103; // Title bar + window borders
+        private const double WindowChromeWidth = 80; // Window borders left + right
+        private const double MaxBoardHeightFraction = 0.88; // Board max 88% of available screen height
+        private const double MinBoardHeightFraction = 0.75; // Minimum board height for very small screens
         private const double MarginFromScreen = 24;
 
         private readonly GameEngine _gameEngine;
@@ -129,24 +132,35 @@ namespace HappyTetris
 
             if (workHeight <= 0 || workWidth <= 0) return;
 
-            // Calculate max board height based on screen (90% of available height)
-            double maxBoardHeightFromScreen = MaxBoardHeightFraction * workHeight;
+            // Calculate available height for the game board (accounting for window chrome)
+            double availableBoardHeight = workHeight - WindowChromeHeight;
             
-            // Calculate scale factors based on board dimensions and available space
-            double scaleByBoard = maxBoardHeightFromScreen / DesignBoardHeight;
+            // Board height is constrained between min and max fractions of screen
+            double maxBoardHeight = MaxBoardHeightFraction * availableBoardHeight;
+            double minBoardHeight = MinBoardHeightFraction * availableBoardHeight;
+            
+            // Calculate scale factor based on available space
+            double scaleByBoard = maxBoardHeight / DesignBoardHeight;
             double scaleByWidth = workWidth / (DesignBoardWidth + SidebarWidth);
             
             // Use the smaller scale to ensure the game fits both height and width
             double scale = Math.Min(1.0, Math.Min(scaleByBoard, scaleByWidth));
             
-            // Calculate window size: sidebar + scaled board + window chrome
+            // Calculate scaled board dimensions
             double scaledBoardWidth = DesignBoardWidth * scale;
             double scaledBoardHeight = DesignBoardHeight * scale;
-            double windowChromeWidth = WindowBorderWidth - DesignBoardWidth - SidebarWidth;
-            double windowChromeHeight = WindowBorderHeight - DesignBoardHeight;
             
-            Width = scaledBoardWidth + SidebarWidth + windowChromeWidth;
-            Height = scaledBoardHeight + windowChromeHeight;
+            // Ensure board doesn't go below minimum size
+            if (scaledBoardHeight < minBoardHeight)
+            {
+                scale = minBoardHeight / DesignBoardHeight;
+                scaledBoardWidth = DesignBoardWidth * scale;
+                scaledBoardHeight = minBoardHeight;
+            }
+            
+            // Calculate final window size
+            Width = scaledBoardWidth + SidebarWidth + WindowChromeWidth;
+            Height = scaledBoardHeight + WindowChromeHeight;
             
             // Calculate cell size based on scaled board
             _cellSize = scaledBoardWidth / BoardColumns;
