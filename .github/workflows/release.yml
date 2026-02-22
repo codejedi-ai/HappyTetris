@@ -1,4 +1,4 @@
-name: Build And Release HappyTetris
+name: Release HappyTetris
 
 on:
   push:
@@ -88,6 +88,10 @@ jobs:
         with:
           tag_name: ${{ steps.meta.outputs.tag }}
           name: HappyTetris ${{ steps.meta.outputs.tag }}
+          body: |
+            **Windows 64-bit — 快乐俄罗斯方块**
+
+            Download the zip below, extract it, then run **HappyTetris.exe** on your Windows PC to play. No install required.
           target_commitish: ${{ github.sha }}
           generate_release_notes: true
           files: ${{ steps.meta.outputs.zip_name }}
