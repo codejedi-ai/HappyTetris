@@ -15,6 +15,11 @@ namespace HappyTetris
     {
         private const double DesignWidth = 550;
         private const double DesignHeight = 800;
+        /// <summary>Design height of the tetris board (top to bottom where blocks land) in pixels.</summary>
+        private const double DesignBoardHeight = 720;
+        /// <summary>Default max height of the board (top to bottom) in pixels.</summary>
+        private const double DefaultMaxBoardHeightPx = 600;
+        private const double MaxBoardHeightFraction = 0.9; // board cannot exceed 90% of screen height
         private const double MarginFromScreen = 24;
 
         private readonly GameEngine _gameEngine;
@@ -122,9 +127,12 @@ namespace HappyTetris
 
             if (workHeight <= 0 || workWidth <= 0) return;
 
-            double scaleH = workHeight / DesignHeight;
-            double scaleW = workWidth / DesignWidth;
-            double scale = Math.Min(1.0, Math.Min(scaleH, scaleW));
+            // Board (tetris play area) cannot exceed 90% of screen height nor the default max (600px).
+            double maxBoardHeightFromScreen = MaxBoardHeightFraction * workHeight;
+            double maxBoardHeight = Math.Min(DefaultMaxBoardHeightPx, maxBoardHeightFromScreen);
+            double scaleByBoard = maxBoardHeight / DesignBoardHeight;
+            double scaleByWidth = workWidth / DesignWidth;
+            double scale = Math.Min(1.0, Math.Min(scaleByBoard, scaleByWidth));
 
             if (scale >= 1.0) return;
 
