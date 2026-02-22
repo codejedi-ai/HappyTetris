@@ -157,9 +157,11 @@
         <!-- Main Game Area -->
         <Grid Margin="110,0,0,0">
             <Border x:Name="GameBorder" BorderBrush="{StaticResource ChineseGoldBrush}" BorderThickness="4"
-                    CornerRadius="10" HorizontalAlignment="Center" VerticalAlignment="Bottom"
-                    Background="#2A2A2A" Width="368" Height="728">
-                <Canvas x:Name="GameCanvas" Width="360" Height="720" ClipToBounds="True"/>
+                    CornerRadius="10" HorizontalAlignment="Center" VerticalAlignment="Stretch"
+                    Background="#2A2A2A">
+                <Viewbox Stretch="Uniform">
+                    <Canvas x:Name="GameCanvas" Width="360" Height="720" ClipToBounds="True"/>
+                </Viewbox>
             </Border>
 
             <!-- Start Overlay -->
