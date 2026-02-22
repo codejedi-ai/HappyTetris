@@ -13,6 +13,10 @@ namespace HappyTetris
 {
     public partial class MainWindow : Window
     {
+        private const double DesignWidth = 550;
+        private const double DesignHeight = 800;
+        private const double MarginFromScreen = 24;
+
         private readonly GameEngine _gameEngine;
         private readonly AudioController _audioController;
         private readonly DispatcherTimer _gameTimer;
@@ -25,7 +29,8 @@ namespace HappyTetris
         public MainWindow()
         {
             InitializeComponent();
-            
+            Loaded += Window_Loaded;
+
             _gameEngine = new GameEngine();
             _audioController = new AudioController();
             _gameTimer = new DispatcherTimer();
@@ -103,6 +108,28 @@ namespace HappyTetris
         {
             _soundEffectsMenuItem.IsChecked = _audioController.EffectsEnabled;
             _gameMusicMenuItem.IsChecked = _audioController.MusicEnabled;
+        }
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            ConstrainWindowToScreen();
+        }
+
+        private void ConstrainWindowToScreen()
+        {
+            double workHeight = SystemParameters.WorkArea.Height - MarginFromScreen;
+            double workWidth = SystemParameters.WorkArea.Width - MarginFromScreen;
+
+            if (workHeight <= 0 || workWidth <= 0) return;
+
+            double scaleH = workHeight / DesignHeight;
+            double scaleW = workWidth / DesignWidth;
+            double scale = Math.Min(1.0, Math.Min(scaleH, scaleW));
+
+            if (scale >= 1.0) return;
+
+            Width = DesignWidth * scale;
+            Height = DesignHeight * scale;
         }
 
         private void ClearGameCanvas()
