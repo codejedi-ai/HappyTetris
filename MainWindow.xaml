@@ -156,7 +156,7 @@
         <Grid Margin="110,0,0,0">
             <Border x:Name="GameBorder" BorderBrush="{StaticResource ChineseGoldBrush}" BorderThickness="4"
                     CornerRadius="10" HorizontalAlignment="Center" VerticalAlignment="Stretch"
-                    Background="#2A2A2A">
+                    Background="#2A2A2A" MouseDown="GameArea_MouseDown">
                 <Viewbox Stretch="Uniform">
                     <Canvas x:Name="GameCanvas" Width="360" Height="660" ClipToBounds="True"/>
                 </Viewbox>

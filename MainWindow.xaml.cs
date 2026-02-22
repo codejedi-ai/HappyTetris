@@ -483,11 +483,20 @@ namespace HappyTetris
             _audioOptionsMenu.PlacementTarget = AudioBtn;
             _audioOptionsMenu.Placement = System.Windows.Controls.Primitives.PlacementMode.Top;
             _audioOptionsMenu.IsOpen = true;
+            
+            // Restore focus to window after menu closes
+            _audioOptionsMenu.Closed += (s, args) => this.Focus();
         }
 
         private void HelpBtn_Click(object sender, RoutedEventArgs e)
         {
             ShowHelp();
+        }
+
+        private void GameArea_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            // Restore focus to window when clicking on game area
+            this.Focus();
         }
 
         protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
